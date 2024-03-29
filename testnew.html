@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Map Cluster</title>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAXiMLkRaq16MeTMVOFnYWqxDd0TCV3prU&callback=initMap"
+        async defer></script>
+    <script>
+        function initMap() {
+
+            var circles = [];
+            var infoWindows = [];
+            var makerWindows = [];
+            var labelTrip = []
+            var tripPoint = []
+            var radius = [6000.7085045807542, 884.7055515581918]
+            var points = [[[10.822254209716991, 106.69215619214481], [10.836754170343362, 106.6757625307735]], [[10.76944324563096, 106.68724743017421], [10.780067246449914, 106.6993066419036]]]
+            const pathIcon = "https://www.google.com/mapfiles/marker_green.png"
+            var bounds = new google.maps.LatLngBounds();
+            var map = new google.maps.Map(document.getElementById('map'), {
+                center: { lat: 10.829504190030177, lng: 106.68395936145916 },
+                zoom: 5
+            });
+            var colorCricle=["http://maps.google.com/mapfiles/ms/icons/blue-dot.png", "http://maps.google.com/mapfiles/ms/icons/blue-dot.png"]
+            var tempColorMaker=[]
+            for (var i = 0; i < 2; i++) {
+                var center = new google.maps.LatLng([[10.829504190030177, 106.68395936145916], [10.774755246040437, 106.69327703603891]][i][0], [[10.829504190030177, 106.68395936145916], [10.774755246040437, 106.69327703603891]][i][1]);
+
+                var circle = new google.maps.Circle({
+                    center: center,
+                    radius: radius[i],
+                    // strokeColor: '#FF0000',
+                    strokeOpacity: 0.8,
+                    strokeWeight: 2,
+                    // fillColor: colorCricle[i],
+                    fillOpacity: 0.35,
+                    map: map
+                });
+                circles.push(circle);
+                var contentString = 'Trip #' + (i + 1);
+                var infoWindow = new google.maps.InfoWindow({
+                    content: contentString
+                });
+                infoWindows.push(infoWindow);
+                hoverData(circle, infoWindows, map);
+                bounds.extend(center);
+            }
+            points.forEach(function (point) {
+                showPoint(point)
+            });
+            loadMakerData()
+            function showPoint(point) {
+                console.log('check valeu data point', point)
+                point.forEach(function (location, index) {
+                    console.log('check valeu data location',location,index)
+
+                    var marker = new google.maps.Marker({
+                        position: new google.maps.LatLng(location[0], location[1]),
+                        map: map,
+                    });
+                    tempColorMaker.push(colorCricle[index])
+                    marker.setIcon(colorCricle[index])
+                    console.log('check vlaue data tempColorMaker', tempColorMaker)
+                    if (point.length == 1) {
+                        marker.setIcon(pathIcon);
+
+                        tripPoint.push({ position: { lat: location[0], lng: location[1] } })
+                    }
+                    bounds.extend(new google.maps.LatLng(location[0], location[1]));
+                });
+            }
+            function loadMakerData() {
+                radius.forEach(function (item, index) {
+                    if (item == 0) {
+                        var stringMaker = 'Trip #' + (index + 1);
+                        labelTrip.push(stringMaker)
+                    }
+                })
+                tripPoint.forEach(function (item, index) {
+                    Object.assign(item, { content: labelTrip[index] })
+                    addMarkerWithInfoWindow(item.position, item.content);
+                })
+            }
+            function addMarkerWithInfoWindow(position, content) {
+                var marker = new google.maps.Marker({
+                    position: position,
+                    map: map
+                });
+                marker.setIcon(pathIcon);
+
+                var infoWindow = new google.maps.InfoWindow({
+                    content: content
+                });
+
+                marker.addListener('mouseover', function () {
+                    infoWindow.open(map, marker);
+                });
+
+                marker.addListener('mouseout', function () {
+                    infoWindow.close();
+                });
+            }
+            function hoverData(obj, arr, map) {
+                function closeTitle() {
+                    for (var i = 0; i < arr.length; i++) {
+                        arr[i].close();
+                    }
+                }
+                google.maps.event.addListener(obj, 'mouseover', (function (index) {
+                    return function (event) {
+                        closeTitle()
+                        arr[index].setPosition(event.latLng);
+                        arr[index].open(map, obj);
+                    };
+                })(i));
+                google.maps.event.addListener(obj, 'mouseout', function () {
+                    closeTitle()
+                });
+            }
+            map.fitBounds(bounds);
+        }
+    </script>
+</head>
+
+<body>
+    <div id="map" style="
+                    height:100%;
+                    width:100%;
+                    position:absolute;
+                    top:0;
+                    left:0;
+                    overflow:hidden;">
+    </div>
+</body>
+
+</html>
